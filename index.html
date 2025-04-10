@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini Roulette 🎰</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1a1a1a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    .board {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .cell {
+      width: 50px;
+      height: 70px;
+      border-radius: 8px;
+      text-align: center;
+      line-height: 70px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: white;
+    }
+    .red { background: crimson; }
+    .black { background: #222; }
+    input, select, button {
+      margin: 0.5rem;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Roulette ⚡🎰</h1>
+
+  <div class="board" id="gameBoard"></div>
+
+  <div>
+    <input type="number" id="betAmount" placeholder="Bahis (sats)" />
+    <input type="number" id="chosenNumber" min="1" max="10" placeholder="Sayı (1-10)" />
+    <select id="chosenColor">
+      <option value="">Renk seç</option>
+      <option value="red">Kırmızı</option>
+      <option value="black">Siyah</option>
+    </select>
+    <input type="text" id="lnAddress" placeholder="Lightning Address (örn: sen@speedwallet.me)" />
+    <button onclick="play()">Oyna</button>
+  </div>
+
+  <h3 id="resultText"></h3>
+  <div id="invoiceContainer"></div>
+
+  <script>
+    const getRandomCell = () => {
+      const number = Math.floor(Math.random() * 10) + 1;
+      const color = Math.random() < 0.5 ? "red" : "black";
+      return { number, color };
+    };
+
+    const generateBoard = () => {
+      const board = [];
+      for (let i = 0; i < 10; i++) board.push(getRandomCell());
+      return board;
+    };
+
+    const renderBoard = (board) => {
+      const container = document.getElementById("gameBoard");
+      container.innerHTML = "";
+      board.forEach(cell => {
+        const div = document.createElement("div");
+        div.className = `cell ${cell.color}`;
+        div.textContent = cell.number;
+        container.appendChild(div);
+      });
+    };
+
+    const play = async () => {
+      const bet = parseInt(document.getElementById("betAmount").value);
+      const number = parseInt(document.getElementById("chosenNumber").value);
+      const color = document.getElementById("chosenColor").value;
+      const lnAddress = document.getElementById("lnAddress").value;
+
+      if (!bet || !number || !color || !lnAddress) {
+        alert("Lütfen tüm alanları doldur.");
+        return;
+      }
+
+      const board = generateBoard();
+      renderBoard(board);
+
+      // Rastgele kazanan hücre
+      const winningCell = board[Math.floor(Math.random() * 10)];
+      let result = "";
+
+      if (winningCell.number === number) {
+        result = `🎯 Sayı doğru! ${bet * 2} sats kazandın!`;
+        sendReward(lnAddress, bet * 2);
+      } else if (winningCell.color === color) {
+        const reward = Math.floor(bet / 2);
+        result = `🎉 Renk doğru! ${reward} sats kazandın!`;
+        sendReward(lnAddress, reward);
+      } else {
+        result = "😢 Kaybettin. Şansını tekrar dene!";
+      }
+
+      document.getElementById("resultText").innerText = result;
+
+      // ⚡️ Backend'den gerçek ödeme alınması
+      // const res = await fetch('/create-invoice', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ amount: bet })
+      // });
+      // const data = await res.json();
+      // document.getElementById("invoiceContainer").innerText = data.payment_request;
+    };
+
+    const sendReward = async (address, amount) => {
+      // ⚠️ Backend'e gönderilir (örnek comment)
+      // await fetch('/send-reward', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ lightningAddress: address, amount })
+      // });
+      console.log(`Ödül gönderilecek: ${amount} sats → ${address}`);
+    };
+  </script>
+</body>
+</html>
